@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>Meta.XO — Wallet & Mining</title>
+<style>
+:root{
+  --bg1:#2b1055; --bg2:#7597de; --bg3:#f0b90b;
+  --glass:rgba(255,255,255,0.06);
+  --line:rgba(255,255,255,0.14);
+  --txt:#e9eef6; --muted:#9aa4b2;
+  --accent1:#f0b90b; --accent2:#f8d33a;
+  --ok:#22c55e; --err:#ef4444;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:system-ui,"Noto Kufi Arabic",Tahoma,Arial;
+  color:var(--txt);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  overflow-x:hidden;
+}
+.hidden{display:none!important}
+.container{max-width:760px;margin:0 auto;padding:14px 14px 96px;position:relative;animation:fadeIn .25s ease}
+#pageHome::before{
+  content:"";
+  position:fixed;inset:0;
+  background:url('data:image/svg+xml;utf8,<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%23f0b90b"/><stop offset="1" stop-color="%23f8d33a"/></linearGradient></defs><circle cx="100" cy="100" r="82" fill="url(%23g)"/><text x="50%" y="55%" text-anchor="middle" font-size="74" font-family="Arial" font-weight="900" fill="%230b0e13">XO</text></svg>') no-repeat center/340px;
+  opacity:.06;z-index:0;pointer-events:none;
+}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(0,0,0,0.38);backdrop-filter:blur(6px);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:8px}
+.brand img{width:28px;height:28px}
+.langbtn{border:1px solid var(--line);background:rgba(0,0,0,0.3);color:var(--txt);padding:8px 10px;border-radius:10px;cursor:pointer}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;backdrop-filter:blur(12px);position:relative;z-index:1;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.h{margin:0 0 8px;font-size:16px}
+.big-usd{font-size:34px;font-weight:800;letter-spacing:.5px}
+.muted{color:var(--muted);font-size:13px}
+.copybtn{width:100%;border:none;border-radius:14px;padding:12px;margin-top:10px;background:rgba(0,0,0,0.4);color:#fff;font-weight:700;cursor:pointer;backdrop-filter:blur(8px)}
+.copybtn:active{transform:scale(.99)}
+.grid2x2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.action{background:linear-gradient(135deg,var(--accent1),var(--accent2));border:none;border-radius:14px;padding:16px;text-align:center;font-weight:800;cursor:pointer;color:#1a1400;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+.action .icon{display:block;font-size:22px;margin-bottom:4px}
+.list .item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item:last-child{border-bottom:none}
+.sym{display:flex;align-items:center;gap:8px}
+.sym img{width:22px;height:22px;border-radius:50%}
+.sym .xo{width:22px;height:22px;border-radius:50%;overflow:hidden;border:1px solid #2b3342}
+.overlay{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;justify-content:center;z-index:50}
+.overlay.show{display:flex}
+.sheet{position:relative;width:100%;max-width:760px;background:rgba(0,0,0,.6);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--line);padding:14px 14px 18px;backdrop-filter:blur(12px)}
+.handle{width:58px;height:5px;background:#2b3445;border-radius:99px;margin:6px auto 10px}
+.field{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.35);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;backdrop-filter:blur(8px)}
+.field input,.field select{background:transparent;border:none;outline:none;color:var(--txt);width:100%;text-align:center}
+.chip{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:12px;margin-top:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#1a1400;font-weight:800;cursor:pointer}
+.btn-outline{background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--txt)}
+.error{color:var(--err);font-size:13px;text-align:center;margin-top:6px}
+.ok{color:var(--ok);font-size:13px;text-align:center;margin-top:6px}
+.login-wrap{position:fixed;inset:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));display:grid;place-items:center;padding:24px;z-index:100}
+.login{width:100%;max-width:460px;background:rgba(0,0,0,0.5);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(12px);position:relative;color:#fff}
+.login .app-title{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px}
+.login .app-title img{width:48px;height:48px}
+.login h1{margin:8px 0 4px;text-align:center}
+.protip{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1c1f26;color:#e9eef6;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:200;backdrop-filter:blur(8px)}
+.toast.show{display:block;animation:fadeIn .2s, fadeOut 1s 2s forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{to{opacity:0}}
+@media (max-width:520px){
+  .big-usd{font-size:28px}
+  .brand img{width:24px;height:24px}
+  .card{padding:12px;border-radius:16px}
+  .grid2x2{gap:8px}
+  .action{padding:12px;border-radius:14px}
+  .btn,.copybtn{padding:12px;font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen" class="login-wrap">
+  <form id="loginForm" class="login" autocomplete="off">
+    <div class="app-title">
+      <img alt="Meta.XO" src="data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%23f0b90b'/><stop offset='1' stop-color='%23f8d33a'/></linearGradient></defs><circle cx='100' cy='100' r='82' fill='url(%23g)'/><text x='50%' y='55%' text-anchor='middle' font-size='74' font-family='Arial' font-weight='900' fill='%230b0e13'>XO</text></svg>"/>
+      <strong>Meta.XO</strong>
+    </div>
+    <h1 id="t_login_title">تسجيل الدخول</h1>
+    <p class="muted" id="t_login_sub" style="text-align:center">أدخل <b>رقم المحفظة (6 أرقام)</b> للدخول. التسجيل إلزامي كل مرة.</p>
+    <div class="field"><input id="walletId" inputmode="numeric" placeholder="123456" style="direction:ltr;text-align:center"></div>
+    <button class="btn" type="submit" id="t_btn_login">دخول</button>
+    <div id="loginMsg" class="error hidden">رقم المحفظة يجب أن يتكون من 6 أرقام فقط.</div>
+    <div class="protip" id="t_login_tip">لن نحفظ رقمك بعد الخروج. سنحفظ الأرصدة والتعدين محليًا لهذا الرقم فقط.</div>
+  </form>
+</div>
+
+<header class="top">
+  <div class="brand">
+    <img alt="Meta.XO" src="data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%23f0b90b'/><stop offset='1' stop-color='%23f8d33a'/></linearGradient></defs><circle cx='100' cy='100' r='82' fill='url(%23g)'/><text x='50%' y='55%' text-anchor='middle' font-size='74' font-family='Arial' font-weight='900' fill='%230b0e13'>XO</text></svg>"/>
+    <b>Meta.XO</b>
+  </div>
+  <button id="langToggle" class="langbtn">EN</button>
+</header>
+
+<div class="container hidden" id="pageHome">
+  <div class="card">
+    <div class="muted" id="t_total_lbl">الرصيد الكلي</div>
+    <div id="totalUSD" class="big-usd">$0.00</div>
+    <button id="copyMain" class="copybtn" type="button">📋 <span id="t_copy_addr">نسخ العنوان</span></button>
+    <div class="muted" style="font-size:12px;word-break:break-all">0x3932890a5d1acb3ab036bd39ade26c47929b37e5</div>
+
+    <div class="grid2x2">
+      <button class="action" id="openVip"><span class="icon">⭐</span><span id="t_act_vip">VIP</span></button>
+      <button class="action" id="openMine"><span class="icon">⛏️</span><span id="t_act_mine">التعدين</span></button>
+      <button class="action" id="openSend"><span class="icon">📤</span><span id="t_act_send">إرسال</span></button>
+      <button class="action" id="openReceive"><span class="icon">📥</span><span id="t_act_recv">استلام</span></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="h"><span id="t_assets">أصولي</span> <span class="muted" id="t_live">• أسعار حية</span></h3>
+    <div id="assetList" class="list"></div>
+  </div>
+</div>
+
+<!-- VIP -->
+<div id="vipOverlay" class="overlay" aria-hidden="true">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h3 class="h" style="text-align:center" id="t_vip_title">العضوية المميزة VIP</h3>
+    <p class="muted" style="text-align:center" id="t_vip_desc">لا يمكن رفع سرعة التعدين إلا بعد الاشتراك بإحدى الباقات.</p>
+    <div class="grid2x2" style="margin-top:6px">
+      <div class="chip"><div class="muted">VIP1</div><div style="font-weight:800;font-size:18px">+120%</div><button class="btn" onclick="buyVip(1,20)">$20</button></div>
+      <div class="chip"><div class="muted">VIP2</div><div style="font-weight:800;font-size:18px">+350%</div><button class="btn" onclick="buyVip(2,50)">$50</button></div>
+      <div class="chip"><div class="muted">VIP3</div><div style="font-weight:800;font-size:18px">+700%</div><button class="btn" onclick="buyVip(3,100)">$100</button></div>
+      <div class="chip"><div class="muted">VIP4</div><div style="font-weight:800;font-size:18px">+1100%</div><button class="btn" onclick="buyVip(4,200)">$200</button></div>
+    </div>
+    <div class="field" style="margin-top:14px"><input readonly id="t_pay_note" value="USDT BEP20 • عنوان الدفع"></div>
+    <div class="field"><input id="vipAddr" readonly value="0x3932890a5d1acb3ab036bd39ade26c47929b37e5"><button class="copybtn" type="button" onclick="copy('#vipAddr')">📋 <span id="t_copy_addr2">نسخ العنوان</span></button></div>
+    <button class="btn btn-outline" onclick="closeVip()" id="t_close">إغلاق</button>
+  </div>
+</div>
+
+<!-- Mining -->
+<div id="mineOverlay" class="overlay" aria-hidden="true">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h3 class="h" style="text-align:center" id="t_mine_title">التعدين الذكي</h3>
+    <p class="muted" style="text-align:center" id="t_mine_desc">السرعة الأساسية بطيئة. لا يمكن زيادتها إلا مع VIP.</p>
+    <div class="field"><select id="mineCoin"></select></div>
+    <div class="field"><input id="mineRate" inputmode="decimal" value="0.0015"><div class="muted" id="t_rate_lbl">ربح/ثانية (أساسي)</div></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <div class="chip" style="flex:1"><div class="muted">VIP</div><div id="vipLevel" style="font-weight:800">0</div></div>
+      <div class="chip" style="flex:1"><div class="muted" id="t_mined_lbl">تم تعدينه</div><div id="minedNow" style="font-weight:800">0.0000</div></div>
+      <div class="chip" style="flex:1"><div class="muted" id="t_state_lbl">الحالة</div><div id="mineState" style="font-weight:800">متوقف</div></div>
+    </div>
+    <button id="btnMine" class="btn" data-i18n-start="بدء التعدين" data-i18n-stop="إيقاف & إضافة">بدء التعدين</button>
+    <button class="btn btn-outline" onclick="closeMine()" id="t_close2">إغلاق</button>
+  </div>
+</div>
+
+<!-- Withdraw -->
+<div id="wdOverlay" class="overlay" aria-hidden="true">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h3 class="h" id="wdTitle">سحب</h3>
+    <div class="field"><input id="wdAddr" placeholder="عنوان TRC20 يبدأ بحرف T"></div>
+    <div class="field"><input id="wdAmount" inputmode="decimal" placeholder="المبلغ"></div>
+    <div id="wdMsg" class="error hidden"></div>
+    <button class="btn" onclick="doWithdraw()" id="t_withdraw_now">سحب الآن</button>
+    <button class="btn btn-outline" onclick="closeWd()" id="t_close3">إغلاق</button>
+  </div>
+</div>
+
+<!-- Send -->
+<div id="sendOverlay" class="overlay" aria-hidden="true">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h3 class="h" style="text-align:center" id="t_send_title">إرسال</h3>
+    <div class="field"><select id="sendCoin"></select></div>
+    <div class="field"><input id="sendAmount" placeholder="المبلغ" inputmode="decimal"></div>
+    <div class="field"><select id="sendNet"><option value="BEP20">BEP20</option><option value="ERC20">ERC20</option><option value="TRON">TRON (TRC20)</option></select></div>
+    <div class="field"><input id="sendTo" placeholder="عنوان المحفظة"></div>
+    <button class="btn" onclick="doSend()" id="t_send_now">إرسال الآن</button>
+    <div id="sendMsg" class="error hidden"></div>
+    <button class="btn btn-outline" onclick="closeSend()" id="t_close4">إغلاق</button>
+  </div>
+</div>
+
+<!-- Receive -->
+<div id="recvOverlay" class="overlay" aria-hidden="true">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h3 class="h" style="text-align:center" id="t_recv_title">استلام</h3>
+    <p class="muted center" id="t_recv_desc">يمكنك الشراء عبر هذا العنوان (USDT • BEP20):</p>
+    <div class="field"><input id="recvAddr" readonly value="0x3932890a5d1acb3ab036bd39ade26c47929b37e5"></div>
+    <button class="btn" type="button" onclick="copy('#recvAddr')">📋 <span id="t_copy_addr3">نسخ العنوان</span></button>
+    <button class="btn btn-outline" onclick="closeRecv()" id="t_close5">إغلاق</button>
+  </div>
+</div>
+
+<div id="toast" class="toast">تم النسخ ✅</div>
+
+<script>
+// ====== i18n ======
+const I18N = {
+  ar: {
+    dir: "rtl",
+    login_title: "تسجيل الدخول",
+    login_sub: "أدخل <b>رقم المحفظة (6 أرقام)</b> للدخول. التسجيل إلزامي كل مرة.",
+    login_btn: "دخول",
+    login_tip: "لن نحفظ رقمك بعد الخروج. سنحفظ الأرصدة والتعدين محليًا لهذا الرقم فقط.",
+    copy_addr: "نسخ العنوان",
+    total_lbl: "الرصيد الكلي",
+    act_vip: "VIP",
+    act_mine: "التعدين",
+    act_send: "إرسال",
+    act_recv: "استلام",
+    assets: "أصولي",
+    live: "• أسعار حية",
+    vip_title: "العضوية المميزة VIP",
+    vip_desc: "لا يمكن رفع سرعة التعدين إلا بعد الاشتراك بإحدى الباقات.",
+    pay_note: "USDT BEP20 • عنوان الدفع",
+    close: "إغلاق",
+    mine_title: "التعدين الذكي",
+    mine_desc: "السرعة الأساسية بطيئة. لا يمكن زيادتها إلا مع VIP.",
+    rate_lbl: "ربح/ثانية (أساسي)",
+    mined_lbl: "تم تعدينه",
+    state_lbl: "الحالة",
+    withdraw_now: "سحب الآن",
+    send_title: "إرسال",
+    send_now: "إرسال الآن",
+    recv_title: "استلام",
+    recv_desc: "يمكنك الشراء عبر هذا العنوان (USDT • BEP20):",
+    start: "بدء التعدين",
+    stop: "إيقاف & إضافة"
+  },
+  en: {
+    dir: "ltr",
+    login_title: "Sign in",
+    login_sub: "Enter <b>Wallet ID (6 digits)</b> to enter. Sign-in required every time.",
+    login_btn: "Sign in",
+    login_tip: "We don't keep your ID after exit. Balances/mining are kept locally per ID.",
+    copy_addr: "Copy Address",
+    total_lbl: "Total Balance",
+    act_vip: "VIP",
+    act_mine: "Mining",
+    act_send: "Send",
+    act_recv: "Receive",
+    assets: "My Assets",
+    live: "• Live Prices",
+    vip_title: "VIP Membership",
+    vip_desc: "You can only increase mining speed after subscribing to a package.",
+    pay_note: "USDT BEP20 • Payment Address",
+    close: "Close",
+    mine_title: "Smart Mining",
+    mine_desc: "Base speed is slow. You can only increase it with VIP.",
+    rate_lbl: "Profit/sec (base)",
+    mined_lbl: "Mined",
+    state_lbl: "Status",
+    withdraw_now: "Withdraw Now",
+    send_title: "Send",
+    send_now: "Send Now",
+    recv_title: "Receive",
+    recv_desc: "You can buy via this address (USDT • BEP20):",
+    start: "Start Mining",
+    stop: "Stop & Add"
+  }
+};
+let LANG = "ar";
+function applyLang(){
+  const L = I18N[LANG];
+  document.documentElement.setAttribute("dir", L.dir);
+  document.documentElement.setAttribute("lang", LANG);
+  document.getElementById("t_login_title").innerHTML = L.login_title;
+  document.getElementById("t_login_sub").innerHTML = L.login_sub;
+  document.getElementById("t_btn_login").textContent = L.login_btn;
+  document.getElementById("t_login_tip").textContent = L.login_tip;
+  document.getElementById("t_copy_addr").textContent = L.copy_addr;
+  document.getElementById("t_total_lbl").textContent = L.total_lbl;
+  document.getElementById("t_act_vip").textContent = L.act_vip;
+  document.getElementById("t_act_mine").textContent = L.act_mine;
+  document.getElementById("t_act_send").textContent = L.act_send;
+  document.getElementById("t_act_recv").textContent = L.act_recv;
+  document.getElementById("t_assets").textContent = L.assets;
+  document.getElementById("t_live").textContent = L.live;
+  document.getElementById("t_vip_title").textContent = L.vip_title;
+  document.getElementById("t_vip_desc").textContent = L.vip_desc;
+  document.getElementById("t_pay_note").value = L.pay_note;
+  document.getElementById("t_copy_addr2").textContent = L.copy_addr;
+  document.getElementById("t_close").textContent = L.close;
+  document.getElementById("t_mine_title").textContent = L.mine_title;
+  document.getElementById("t_mine_desc").textContent = L.mine_desc;
+  document.getElementById("t_rate_lbl").textContent = L.rate_lbl;
+  document.getElementById("t_mined_lbl").textContent = L.mined_lbl;
+  document.getElementById("t_state_lbl").textContent = L.state_lbl;
+  const btnMine = document.getElementById("btnMine");
+  btnMine.textContent = mining.on ? I18N[LANG].stop : I18N[LANG].start;
+  document.getElementById("t_close2").textContent = L.close;
+  document.getElementById("t_withdraw_now").textContent = L.withdraw_now;
+  document.getElementById("t_close3").textContent = L.close;
+  document.getElementById("t_send_title").textContent = L.send_title;
+  document.getElementById("t_send_now").textContent = L.send_now;
+  document.getElementById("t_close4").textContent = L.close;
+  document.getElementById("t_recv_title").textContent = L.recv_title;
+  document.getElementById("t_recv_desc").textContent = L.recv_desc;
+  document.getElementById("t_copy_addr3").textContent = L.copy_addr;
+  document.getElementById("t_close5").textContent = L.close;
+  document.getElementById("langToggle").textContent = (LANG === "ar") ? "EN" : "AR";
+}
+document.getElementById("langToggle").addEventListener("click", () => { LANG = (LANG === "ar") ? "en" : "ar"; applyLang(); });
+
+// ====== Normalize digits (Arabic/Persian/ASCII) ======
+function normalizeDigits(s){
+  if(!s) return "";
+  // Remove bidi marks & spaces
+  s = s.replace(/[\u200E\u200F\u202A-\u202E\s]/g,"");
+  // Map Arabic-Indic ٠-٩ to 0-9
+  s = s.replace(/[٠-٩]/g, ch => "٠١٢٣٤٥٦٧٨٩".indexOf(ch));
+  // Map Extended Arabic-Indic ۰-۹ (Persian) to 0-9
+  s = s.replace(/[۰-۹]/g, ch => "۰۱۲۳۴۵۶۷۸۹".indexOf(ch));
+  // Keep digits only
+  s = s.replace(/\D/g,"");
+  return s;
+}
+
+// ====== Icons ======
+const ICONS = {
+  BTC: "data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'><circle cx='14' cy='14' r='12' fill='%23f7931a' stroke='%23222933' stroke-width='1'/><text x='50%' y='55%' text-anchor='middle' font-family='Arial' font-size='10' font-weight='700' fill='%230b0e13'>BTC</text></svg>",
+  ETH: "data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'><circle cx='14' cy='14' r='12' fill='%23627eea' stroke='%23222933' stroke-width='1'/><text x='50%' y='55%' text-anchor='middle' font-family='Arial' font-size='10' font-weight='700' fill='%230b0e13'>ETH</text></svg>",
+  TRX: "data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'><circle cx='14' cy='14' r='12' fill='%23ef0027' stroke='%23222933' stroke-width='1'/><text x='50%' y='55%' text-anchor='middle' font-family='Arial' font-size='10' font-weight='700' fill='%23ffffff'>TRX</text></svg>",
+  USDT:"data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'><circle cx='14' cy='14' r='12' fill='%2326a17b' stroke='%23222933' stroke-width='1'/><text x='50%' y='55%' text-anchor='middle' font-family='Arial' font-size='10' font-weight='700' fill='%230b0e13'>USDT</text></svg>",
+  XO:  "data:image/svg+xml;utf8,<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%23f0b90b'/><stop offset='1' stop-color='%23f8d33a'/></linearGradient></defs><circle cx='100' cy='100' r='82' fill='url(%23g)'/><text x='50%' y='55%' text-anchor='middle' font-size='74' font-family='Arial' font-weight='900' fill='%230b0e13'>XO</text></svg>"
+};
+
+// ====== App State ======
+const PRICES = { BTC:0, ETH:0, TRX:0, USDT:1, XO:1.12 };
+const BAL    = { BTC:0, ETH:0, TRX:0, USDT:0, XO:0 };
+const NAMES  = { BTC:'Bitcoin', ETH:'Ethereum', TRX:'TRON', USDT:'Tether', XO:'XO' };
+let walletId = null;
+let vip = 0;
+let mining = { on:false, coin:'XO', baseRate:0.0015, last:0 };
+let minedInSession = 0;
+function key(ns){ return ns+'_'+(walletId||''); }
+function saveBalances(){ if(walletId) localStorage.setItem(key('bal'), JSON.stringify(BAL)); }
+function saveVip(){ if(walletId) localStorage.setItem(key('vip'), vip); }
+function saveMining(){ if(walletId) localStorage.setItem(key('mining'), JSON.stringify(mining)); }
+function loadState(){ 
+  const b = localStorage.getItem(key('bal')); if(b) Object.assign(BAL, JSON.parse(b));
+  const v = localStorage.getItem(key('vip')); if(v) vip = parseInt(v)||0;
+  const m = localStorage.getItem(key('mining')); if(m) Object.assign(mining, JSON.parse(m));
+}
+function fmt(n){ return Number(n||0).toFixed(2); }
+
+// ====== Prices ======
+async function fetchPrices(){
+  try{
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tron,tether&vs_currencies=usd',{cache:'no-store'});
+    const j = await r.json();
+    PRICES.BTC=j.bitcoin.usd; PRICES.ETH=j.ethereum.usd; PRICES.TRX=j.tron.usd; PRICES.USDT=j.tether.usd;
+    renderAssets(); updateTotal();
+  }catch(e){ console.log('price error', e); }
+}
+fetchPrices(); setInterval(fetchPrices, 60000);
+
+// ====== Toast / Copy ======
+const toastEl = document.getElementById('toast');
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),2300); }
+document.getElementById('copyMain').onclick=()=>{ navigator.clipboard.writeText('0x3932890a5d1acb3ab036bd39ade26c47929b37e5'); toast(LANG==='ar'?'تم نسخ العنوان':'Copied'); };
+function copy(sel){ const el=document.querySelector(sel); navigator.clipboard.writeText(el.value||el.textContent||''); toast(LANG==='ar'?'تم نسخ العنوان':'Copied'); }
+document.getElementById('recvAddr').value='0x3932890a5d1acb3ab036bd39ade26c47929b37e5';
+
+// ====== Login with robust normalization ======
+const walletInput = document.getElementById('walletId');
+walletInput.addEventListener('input', ()=>{
+  let cur = normalizeDigits(walletInput.value);
+  if(cur.length > 6) cur = cur.slice(0,6);
+  walletInput.value = cur;
+});
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const msg = document.getElementById('loginMsg');
+  let v = normalizeDigits(walletInput.value);
+  walletInput.value = v; // show normalized digits
+  if(!/^\d{6}$/.test(v)){ msg.classList.remove('hidden'); return; }
+  msg.classList.add('hidden');
+  walletId = v;
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('pageHome').classList.remove('hidden');
+  loadState(); renderAssets(); updateTotal(); resumeMiningIfNeeded();
+  applyLang();
+});
+
+// ====== Assets ======
+const assetList = document.getElementById('assetList');
+function assetIcon(k){
+  return (k==='XO') ? `<span class="xo"><img src="${ICONS.XO}" alt="XO" style="width:100%;height:100%;object-fit:cover"/></span>` : `<img src="${ICONS[k]}" alt="${k}"/>`;
+}
+function renderAssets(){
+  assetList.innerHTML='';
+  ['USDT','XO','TRX','BTC','ETH'].forEach(k=>{
+    const el = document.createElement('div'); el.className='item'; el.dataset.coin=k;
+    el.innerHTML = `
+      <div class="sym">
+        ${assetIcon(k)}
+        <div>
+          <div style="font-weight:700">${k} <span class="muted" style="font-weight:400">${NAMES[k]}</span></div>
+          <div class="muted">≈ $${fmt(PRICES[k])}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div>${(BAL[k]||0).toFixed(4)}</div>
+        <div class="muted">$${fmt((BAL[k]||0)*PRICES[k])}</div>
+      </div>`;
+    el.addEventListener('click', ()=>openWithdraw(k));
+    assetList.appendChild(el);
+  });
+}
+function updateTotal(){ let t=0; for(const k in BAL) t+= (BAL[k]||0)*PRICES[k]; document.getElementById('totalUSD').textContent = '$'+fmt(t); }
+renderAssets(); updateTotal();
+
+// ====== VIP ======
+const vipOverlay = document.getElementById('vipOverlay');
+document.getElementById('openVip').onclick=()=>{ document.getElementById('vipLevel').textContent = vip; vipOverlay.classList.add('show'); };
+function closeVip(){ vipOverlay.classList.remove('show'); }
+function buyVip(level, price){
+  alert((LANG==='ar'?'للتفعيل أرسل ':'To activate, send ')+price+' USDT '+(LANG==='ar'?'إلى العنوان المعروض. بعد التأكيد ستُفعّل VIP':'to the shown address. After confirmation, VIP will be activated ')+level+'.');
+  vip = level; saveVip();
+  document.getElementById('vipLevel').textContent = vip;
+  document.getElementById('mineRate').readOnly = false;
+}
+window.buyVip = buyVip; window.closeVip = closeVip;
+
+// ====== Mining ======
+const mineOverlay = document.getElementById('mineOverlay');
+document.getElementById('openMine').onclick=()=>{ populateMine(); mineOverlay.classList.add('show'); };
+function closeMine(){ mineOverlay.classList.remove('show'); }
+function populateMine(){ 
+  const sel = document.getElementById('mineCoin'); sel.innerHTML='';
+  ['XO','USDT','TRX','BTC','ETH'].forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  sel.value = mining.coin;
+  const rateEl = document.getElementById('mineRate');
+  rateEl.value = (mining.baseRate||0.0015).toFixed(4);
+  rateEl.readOnly = vip===0;
+  document.getElementById('vipLevel').textContent = vip;
+  document.getElementById('mineState').textContent = mining.on?(LANG==='ar'?'قيد التعدين':'Mining'):(LANG==='ar'?'متوقف':'Stopped');
+  document.getElementById('minedNow').textContent = '0.0000';
+  const btnMine = document.getElementById('btnMine');
+  btnMine.textContent = mining.on ? I18N[LANG].stop : I18N[LANG].start;
+}
+document.getElementById('btnMine').onclick=()=>{
+  const btn = document.getElementById('btnMine');
+  if(mining.on){
+    mining.on=false; saveMining();
+    const add = parseFloat(document.getElementById('minedNow').textContent)||0;
+    BAL[mining.coin]=(BAL[mining.coin]||0)+add; saveBalances(); renderAssets(); updateTotal();
+    document.getElementById('mineState').textContent=(LANG==='ar'?'متوقف':'Stopped');
+    btn.textContent = I18N[LANG].start;
+    return;
+  }
+  mining.coin = document.getElementById('mineCoin').value;
+  let base = Math.max(0, parseFloat(document.getElementById('mineRate').value)||0.0015);
+  if(vip===0 && base>0.0015) base = 0.0015;
+  mining.baseRate = base;
+  mining.on = true;
+  mining.last = Date.now();
+  saveMining();
+  document.getElementById('mineState').textContent=(LANG==='ar'?'قيد التعدين':'Mining');
+  btn.textContent = I18N[LANG].stop;
+  minedInSession=0;
+  tickMiningUI();
+};
+function effectiveRate(){ return vip<=0 ? mining.baseRate : mining.baseRate * (1 + vip*1.2); }
+function tickMiningUI(){
+  if(!mining.on) return;
+  minedInSession += effectiveRate();
+  document.getElementById('minedNow').textContent = minedInSession.toFixed(4);
+  requestAnimationFrame(()=>setTimeout(tickMiningUI, 1000));
+}
+function resumeMiningIfNeeded(){
+  if(!mining.on) return;
+  const now = Date.now();
+  const elapsedSec = Math.max(0, Math.floor((now - (mining.last||now))/1000));
+  const add = elapsedSec * effectiveRate();
+  BAL[mining.coin]=(BAL[mining.coin]||0)+add;
+  saveBalances();
+  mining.last = now; saveMining();
+  renderAssets(); updateTotal();
+  minedInSession = 0;
+  requestAnimationFrame(()=>setTimeout(tickMiningUI, 1000));
+}
+setInterval(()=>{ if(mining.on){ mining.last = Date.now(); saveMining(); } }, 3000);
+window.closeMine = closeMine;
+
+// ====== Withdraw ======
+let wdCoin = 'USDT';
+const wdOverlay = document.getElementById('wdOverlay');
+function openWithdraw(coin){
+  wdCoin = coin;
+  document.getElementById('wdTitle').textContent = (LANG==='ar'?'سحب ':'Withdraw ')+coin;
+  document.getElementById('wdAddr').value='';
+  document.getElementById('wdAmount').value='';
+  document.getElementById('wdMsg').classList.add('hidden');
+  wdOverlay.classList.add('show');
+}
+function closeWd(){ wdOverlay.classList.remove('show'); }
+function doWithdraw(){
+  const addr = document.getElementById('wdAddr').value.trim();
+  const amt  = parseFloat(document.getElementById('wdAmount').value||'0');
+  const msg  = document.getElementById('wdMsg');
+  if(vip<=0){ msg.textContent=(LANG==='ar'?'اشترك في إحدى باقات VIP لتفعيل السحب.':'Subscribe to VIP to enable withdrawals.'); msg.classList.remove('hidden'); msg.classList.add('error'); return; }
+  if(!/^T[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(addr)){ msg.textContent=(LANG==='ar'?'عنوان TRC20 غير صالح.':'Invalid TRC20 address.'); msg.classList.remove('hidden'); msg.classList.add('error'); return; }
+  if(!(amt>0)){ msg.textContent=(LANG==='ar'?'أدخل مبلغًا صالحًا.':'Enter a valid amount.'); msg.classList.remove('hidden'); msg.classList.add('error'); return; }
+  if((BAL[wdCoin]||0) < amt){ msg.textContent=(LANG==='ar'?'رصيد غير كافٍ.':'Insufficient balance.'); msg.classList.remove('hidden'); msg.classList.add('error'); return; }
+  BAL[wdCoin]=(BAL[wdCoin]||0)-amt; saveBalances(); renderAssets(); updateTotal();
+  msg.classList.remove('hidden'); msg.classList.remove('error'); msg.classList.add('ok'); msg.textContent=(LANG==='ar'?'تم إنشاء طلب السحب (محاكاة).':'Withdrawal request created (simulated).');
+  setTimeout(()=>{ closeWd(); }, 1200);
+}
+window.openWithdraw = openWithdraw; window.closeWd = closeWd; window.doWithdraw = doWithdraw;
+
+// ====== Send / Receive ======
+const sendOverlay = document.getElementById('sendOverlay');
+document.getElementById('openSend').onclick=()=>{ populateSend(); sendOverlay.classList.add('show'); };
+function closeSend(){ sendOverlay.classList.remove('show'); }
+function populateSend(){
+  const sel = document.getElementById('sendCoin'); sel.innerHTML='';
+  ['USDT','XO','TRX','BTC','ETH'].forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  document.getElementById('sendAmount').value='';
+  document.getElementById('sendTo').value='';
+  document.getElementById('sendMsg').classList.add('hidden');
+}
+function validAddress(addr, net){
+  if(net==='TRON') return /^T[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(addr);
+  if(net==='BEP20' || net==='ERC20') return /^0x[a-fA-F0-9]{40}$/.test(addr);
+  return false;
+}
+function doSend(){
+  const coin = document.getElementById('sendCoin').value;
+  const amount = parseFloat(document.getElementById('sendAmount').value||'0');
+  const net = document.getElementById('sendNet').value;
+  const to = document.getElementById('sendTo').value.trim();
+  const msg = document.getElementById('sendMsg');
+  if(!(amount>0)){ msg.textContent=(LANG==='ar'?'الرجاء إدخال مبلغ صالح.':'Please enter a valid amount.'); msg.classList.remove('hidden'); return; }
+  if(!validAddress(to, net)){ msg.textContent=(LANG==='ar'?'عنوان غير صالح للشبكة المختارة.':'Invalid address for selected network.'); msg.classList.remove('hidden'); return; }
+  if((BAL[coin]||0) < amount){ msg.textContent=(LANG==='ar'?'رصيد غير كافٍ.':'Insufficient balance.'); msg.classList.remove('hidden'); return; }
+  BAL[coin]=(BAL[coin]||0)-amount; saveBalances(); renderAssets(); updateTotal();
+  msg.classList.remove('hidden'); msg.classList.remove('error'); msg.classList.add('ok'); msg.textContent=(LANG==='ar'?'تم إنشاء طلب الإرسال (محاكاة).':'Send request created (simulated).');
+  setTimeout(()=>{ closeSend(); }, 1200);
+}
+window.closeSend = closeSend; window.doSend = doSend;
+
+const recvOverlay = document.getElementById('recvOverlay');
+document.getElementById('openReceive').onclick=()=>recvOverlay.classList.add('show');
+function closeRecv(){ recvOverlay.classList.remove('show'); }
+window.closeRecv = closeRecv;
+
+// ====== Initial render ======
+applyLang();
+renderAssets(); updateTotal();
+</script>
+</body>
+</html>
